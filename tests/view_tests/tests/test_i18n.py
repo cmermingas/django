@@ -344,6 +344,25 @@ class I18NViewTests(SimpleTestCase):
             self.assertContains(response, "il faut le traduire")
             self.assertNotContains(response, "Untranslated string")
 
+    def test_jsi18n_fallback_language_with_custom_locale_dir(self):
+        """
+        Let's make sure that the fallback language is still working properly
+        in cases where a locale dir is not called "locale" under an installed app.
+        """
+        locale_paths = [
+            path.join(
+                path.dirname(path.dirname(path.abspath(__file__))),
+                "custom_locale_path",
+            ),
+        ]
+        with self.settings(LOCALE_PATHS=locale_paths), override("es_MX"):
+            # Passes
+            response = self.client.get("/jsi18n/")
+            self.assertContains(response, "custom_locale_path: esto tiene que ser traducido")
+            # Fails
+            response = self.client.get("/jsi18n_no_packages/")
+            self.assertContains(response, "custom_locale_path: esto tiene que ser traducido")
+
     def test_i18n_fallback_language_plural(self):
         """
         The fallback to a language with less plural forms maintains the real
